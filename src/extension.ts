@@ -1,26 +1,30 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+// src/extension.ts
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+import { registerCommands } from './commands';
+import { ShadcnProvider } from './providers/ShadcnProvider';
+import { SnippetProvider } from './providers/SnippetProvider'; // <-- IMPORTAR O SNIPPET PROVIDER
+
 export function activate(context: vscode.ExtensionContext) {
+    // Cria o Provedor da Tree View
+    const shadcnProvider = new ShadcnProvider();
+    vscode.window.createTreeView('shadcn-ui-helper', {
+        treeDataProvider: shadcnProvider
+    });
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "shadcn-code" is now active!');
+    // Registra todos os comandos da extensão
+    registerCommands(context, shadcnProvider);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('shadcn-code.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from shadcn-code!');
-	});
-
-	context.subscriptions.push(disposable);
+    // ATIVAÇÃO DO SNIPPET PROVIDER
+    const snippetProvider = new SnippetProvider();
+    // Registra o provider para arquivos React (TSX e JSX)
+    context.subscriptions.push(
+        vscode.languages.registerCompletionItemProvider(
+            ['typescriptreact', 'javascriptreact'],
+            snippetProvider,
+            ':' // Opcional: pode acionar ao digitar, por exemplo, ':'
+        )
+    );
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
